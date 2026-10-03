@@ -1,0 +1,22 @@
+AI FITNESS TRACKER
+==================
+
+Random Forest Accuracy: 95.30%
+SVM Accuracy: 68.91%
+Selected Model: Random Forest
+Best Accuracy: 95.30%
+
+Classification Report
+---------------------
+                precision    recall  f1-score   support
+
+         bench       0.99      0.98      0.99      1518
+      deadlift       0.99      0.81      0.89      3158
+overhead_press       0.99      1.00      0.99      3304
+          rest       0.99      1.00      1.00      2920
+           row       1.00      0.98      0.99      2228
+         squat       0.73      1.00      0.84      1610
+
+      accuracy                           0.95     14738
+     macro avg       0.95      0.96      0.95     14738
+  weighted avg       0.96      0.95      0.95     14738
