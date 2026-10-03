@@ -1,0 +1,2 @@
+rows,columns,accelerometer_columns,gyroscope_columns,number_of_exercises,number_of_participants,number_of_sets
+10006688,11,"acc_x, acc_y, acc_z","gyr_x, gyr_y, gyr_z",6,5,0

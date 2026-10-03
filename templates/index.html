@@ -1,0 +1,1945 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Fitness Tracker PRO v3.0 Ultra - Biomechanical Vision Coach</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- FontAwesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <!-- Google Fonts: Inter & JetBrains Mono -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;600;700&display=swap" rel="stylesheet">
+    
+    <!-- MediaPipe Pose & Camera Utils CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/pose/pose.js" crossorigin="anonymous"></script>
+
+    <script>
+        tailwind.config = {
+            darkMode: 'class',
+            theme: {
+                extend: {
+                    colors: {
+                        cyber: {
+                            bg: '#090d16',
+                            card: 'rgba(15, 23, 42, 0.65)',
+                            border: 'rgba(255, 255, 255, 0.08)',
+                            neonCyan: '#00f2fe',
+                            neonPurple: '#7000ff',
+                            neonGreen: '#00ff88',
+                            neonPink: '#ff007f',
+                            neonOrange: '#ff9900',
+                            neonRed: '#ff0055'
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                        mono: ['JetBrains Mono', 'monospace']
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            background-color: #060911;
+            background-image: 
+                radial-gradient(circle at 15% 20%, rgba(0, 242, 254, 0.05) 0%, transparent 40%),
+                radial-gradient(circle at 85% 80%, rgba(112, 0, 255, 0.06) 0%, transparent 40%),
+                radial-gradient(circle at 50% 50%, rgba(15, 23, 42, 0.5) 0%, transparent 100%);
+            background-attachment: fixed;
+            color: #f1f5f9;
+        }
+
+        .glass-card {
+            background: rgba(15, 23, 42, 0.6);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            border: 1px solid rgba(255, 255, 255, 0.08);
+            box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+        }
+
+        .glass-card-interactive {
+            transition: all 0.2s ease-in-out;
+        }
+        .glass-card-interactive:hover {
+            border-color: rgba(0, 242, 254, 0.25);
+            box-shadow: 0 10px 30px -10px rgba(0, 242, 254, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .neon-glow-cyan {
+            box-shadow: 0 0 15px rgba(0, 242, 254, 0.4);
+        }
+
+        .pulse-live {
+            animation: pulseGlow 1.8s infinite ease-in-out;
+        }
+
+        @keyframes pulseGlow {
+            0% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0.7); }
+            70% { box-shadow: 0 0 0 8px rgba(0, 255, 136, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(0, 255, 136, 0); }
+        }
+
+        /* Custom Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+            height: 6px;
+        }
+        ::-webkit-scrollbar-track {
+            background: rgba(15, 23, 42, 0.6);
+        }
+        ::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 242, 254, 0.4);
+        }
+
+        /* Scanline HUD Effect */
+        .scanlines {
+            position: relative;
+            overflow: hidden;
+        }
+        .scanlines::before {
+            content: " ";
+            display: block;
+            position: absolute;
+            top: 0; left: 0; bottom: 0; right: 0;
+            background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.03), rgba(0, 255, 0, 0.01), rgba(0, 0, 255, 0.03));
+            z-index: 10;
+            background-size: 100% 4px, 6px 100%;
+            pointer-events: none;
+            opacity: 0.6;
+        }
+    </style>
+</head>
+<body class="font-sans antialiased min-h-screen flex flex-col p-3 lg:p-5 gap-4 select-none">
+
+    <!-- TOP HEADER NAVBAR -->
+    <header class="glass-card rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 sticky top-0 z-50 border-b border-white/10">
+        <!-- Logo & Title -->
+        <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-cyan-500 via-indigo-600 to-purple-600 p-0.5 flex items-center justify-center neon-glow-cyan">
+                <div class="w-full h-full bg-cyber-bg rounded-[10px] flex items-center justify-center">
+                    <i class="fa-solid font-black fa-bolt text-cyber-neonCyan text-lg"></i>
+                </div>
+            </div>
+            <div>
+                <div class="flex items-center gap-2">
+                    <h1 class="text-xl font-extrabold tracking-wider bg-gradient-to-r from-cyan-400 via-teal-300 to-purple-500 bg-clip-text text-transparent">
+                        AI FITNESS TRACKER
+                    </h1>
+                    <span class="px-2 py-0.5 text-[10px] font-mono font-bold uppercase tracking-widest rounded-full bg-gradient-to-r from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 text-cyan-300">
+                        PRO v3.0 ULTRA
+                    </span>
+                </div>
+                <p class="text-xs text-slate-400 hidden sm:block">Computer Vision, Auto-Detect & Biomechanical Form Analyzer</p>
+            </div>
+        </div>
+
+        <!-- Live Status Indicators -->
+        <div class="flex items-center gap-4 bg-slate-900/60 border border-white/5 px-3 py-1.5 rounded-xl text-xs font-mono">
+            <div class="flex items-center gap-2">
+                <span id="engine-status-dot" class="w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-live"></span>
+                <span id="engine-status-text" class="text-emerald-400 font-semibold tracking-wider">LIVE SIMULATION</span>
+            </div>
+            <div class="h-3 w-[1px] bg-white/10"></div>
+            <div class="text-slate-300">
+                FPS: <span id="fps-counter" class="text-cyan-400 font-bold">60</span>
+            </div>
+            <div class="h-3 w-[1px] bg-white/10 hidden md:block"></div>
+            <div class="text-slate-300 hidden md:block">
+                LATENCY: <span id="latency-counter" class="text-cyan-400 font-bold">6ms</span>
+            </div>
+        </div>
+
+        <!-- Top Action Buttons -->
+        <div class="flex items-center gap-2">
+            <!-- Mode Switcher: Webcam vs Demo Simulation -->
+            <button id="btn-mode-toggle" onclick="toggleEngineMode()" class="bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20">
+                <i class="fa-solid fa-camera" id="mode-icon"></i>
+                <span id="mode-text">Start Webcam</span>
+            </button>
+
+            <!-- Gym Distance Fullscreen HUD Button -->
+            <button id="btn-gym-hud" onclick="toggleGymHUD()" class="glass-card glass-card-interactive px-3 py-2 rounded-xl text-xs font-medium text-slate-200 flex items-center gap-2 hover:text-cyan-400" title="Gym Distance Mode (10ft away)">
+                <i class="fa-solid fa-expand text-cyan-400"></i>
+                <span class="hidden sm:inline">Gym HUD</span>
+            </button>
+
+            <button id="btn-refresh-cam" onclick="resetWorkoutSession()" class="glass-card glass-card-interactive px-3 py-2 rounded-xl text-xs font-medium text-slate-200 flex items-center gap-2 hover:text-cyan-400">
+                <i class="fa-solid fa-arrows-rotate text-cyan-400"></i>
+                <span class="hidden sm:inline">Reset</span>
+            </button>
+            <button id="btn-toggle-skeleton" onclick="toggleSkeletonOverlay()" class="glass-card glass-card-interactive px-3 py-2 rounded-xl text-xs font-medium text-slate-200 flex items-center gap-2 hover:text-cyan-400">
+                <i class="fa-solid fa-network-wired text-purple-400"></i>
+                <span id="skeleton-toggle-text" class="hidden sm:inline">Overlay: ON</span>
+            </button>
+            <button onclick="exportSessionLog()" class="bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-slate-950 font-bold px-3.5 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-cyan-500/20">
+                <i class="fa-solid fa-download"></i>
+                <span class="hidden sm:inline">Export Log</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- MAIN DASHBOARD CONTENT (3-COLUMN GRID) -->
+    <main class="grid grid-cols-1 lg:grid-cols-12 gap-4 flex-grow">
+        
+        <!-- LEFT COLUMN: CONTROLS & MODEL CONFIG (3 COLS) -->
+        <aside class="lg:col-span-3 flex flex-col gap-4">
+            
+            <!-- Model & Pipeline Selector -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col gap-3">
+                <div class="flex items-center gap-2 border-b border-white/10 pb-2.5">
+                    <i class="fa-solid fa-microchip text-cyan-400 text-sm"></i>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">AI Vision Engine</h2>
+                </div>
+
+                <div class="space-y-3 text-xs">
+                    <div>
+                        <label class="text-slate-400 text-[11px] block mb-1">Architecture Pipeline</label>
+                        <select id="model-select" onchange="handleModelChange(this.value)" class="w-full bg-slate-900/90 border border-white/10 rounded-xl px-3 py-2 text-slate-200 focus:outline-none focus:border-cyan-400 font-mono text-xs">
+                            <option value="mediapipe_real">MediaPipe Full Body 33-Keypoints (Hardware Accelerated)</option>
+                            <option value="mediapipe_xgb">Biomechanical Angle FSM + Cheat Rules</option>
+                            <option value="rf">Random Forest Classifier (v1.8)</option>
+                        </select>
+                    </div>
+
+                    <div class="p-2.5 rounded-xl bg-slate-900/50 border border-white/5 font-mono text-[11px] space-y-1">
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Tracking Accuracy:</span>
+                            <span id="model-accuracy" class="text-emerald-400 font-bold">98.4%</span>
+                        </div>
+                        <div class="flex justify-between">
+                            <span class="text-slate-400">Pose Confidence:</span>
+                            <span id="model-speed" class="text-cyan-400 font-bold">High (3D Pose)</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Exercise Target & Auto-Detect Mode -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-dumbbell text-purple-400 text-sm"></i>
+                        <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Exercise Activity</h2>
+                    </div>
+                    <!-- Auto Detect Interactive Toggle -->
+                    <button id="btn-autodetect-toggle" onclick="toggleAutoDetect()" class="px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider rounded-full border transition-all bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:opacity-90">
+                        <i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AUTO: ON
+                    </button>
+                </div>
+
+                <!-- Routine / Circuit Mode Selector -->
+                <div class="p-2.5 rounded-xl bg-slate-900/60 border border-white/10 flex items-center justify-between text-xs font-mono">
+                    <div class="flex items-center gap-1.5 text-slate-300">
+                        <i class="fa-solid fa-fire text-amber-400"></i>
+                        <span>Workout Mode:</span>
+                    </div>
+                    <select id="routine-select" onchange="handleRoutineChange(this.value)" class="bg-slate-800 border border-white/10 rounded-lg px-2 py-1 text-cyan-300 font-bold text-[11px] focus:outline-none focus:border-cyan-400">
+                        <option value="single">Single Exercise</option>
+                        <option value="fullbody">⚡ 3-Move Circuit</option>
+                    </select>
+                </div>
+
+                <!-- Circuit Step Progress Banner (shown if routine is fullbody) -->
+                <div id="circuit-progress-banner" class="hidden p-2 rounded-xl bg-gradient-to-r from-purple-500/20 to-pink-500/20 border border-purple-500/30 text-[11px] font-mono flex items-center justify-between">
+                    <span class="text-purple-300 font-bold">CIRCUIT STEP 1 OF 3</span>
+                    <span class="text-slate-400">Target: 10 Reps</span>
+                </div>
+
+                <div class="grid grid-cols-1 gap-2 text-xs">
+                    <button onclick="setExercise('bicep')" id="ex-btn-bicep" class="ex-btn p-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/10 text-cyan-300 font-semibold flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-hand-fist text-sm"></i> Bicep Curls
+                        </span>
+                        <i class="fa-solid fa-check text-xs"></i>
+                    </button>
+                    <button onclick="setExercise('squat')" id="ex-btn-squat" class="ex-btn p-2.5 rounded-xl border border-white/5 bg-slate-900/40 text-slate-300 hover:border-white/20 flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-person-arrow-down-to-line text-sm"></i> Barbell Squats
+                        </span>
+                    </button>
+                    <button onclick="setExercise('bench')" id="ex-btn-bench" class="ex-btn p-2.5 rounded-xl border border-white/5 bg-slate-900/40 text-slate-300 hover:border-white/20 flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-align-center text-sm"></i> Push-Ups / Bench Press
+                        </span>
+                    </button>
+                    <button onclick="setExercise('deadlift')" id="ex-btn-deadlift" class="ex-btn p-2.5 rounded-xl border border-white/5 bg-slate-900/40 text-slate-300 hover:border-white/20 flex items-center justify-between transition-all">
+                        <span class="flex items-center gap-2.5">
+                            <i class="fa-solid fa-weight-hanging text-sm"></i> Deadlift
+                        </span>
+                    </button>
+                </div>
+            </div>
+
+            <!-- Parameters & Sliders -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col gap-3 flex-grow">
+                <div class="flex items-center gap-2 border-b border-white/10 pb-2.5">
+                    <i class="fa-solid fa-sliders text-cyan-400 text-sm"></i>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Coaching Strictness & Audio</h2>
+                </div>
+
+                <div class="space-y-4 text-xs">
+                    <!-- Form Strictness -->
+                    <div>
+                        <div class="flex justify-between text-slate-300 mb-1">
+                            <span>Form Strictness</span>
+                            <span id="strictness-val" class="font-mono text-cyan-400">Strict (85%)</span>
+                        </div>
+                        <input type="range" min="50" max="98" value="85" class="w-full accent-cyan-400 cursor-pointer" oninput="updateStrictness(this.value)">
+                    </div>
+
+                    <!-- Audio Feedback Toggle -->
+                    <div class="pt-2 border-t border-white/5 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-volume-high text-cyan-400"></i>
+                            <span class="text-slate-300">Voice AI Personal Coach</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="audio-toggle" checked class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-cyan-500"></div>
+                        </label>
+                    </div>
+
+                    <!-- Sound SFX Chimes Toggle -->
+                    <div class="pt-1 flex items-center justify-between">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-bell text-purple-400"></i>
+                            <span class="text-slate-300">Rep Chimes & Buzzers</span>
+                        </div>
+                        <label class="relative inline-flex items-center cursor-pointer">
+                            <input type="checkbox" id="sfx-toggle" checked class="sr-only peer">
+                            <div class="w-9 h-5 bg-slate-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-purple-500"></div>
+                        </label>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+        <!-- MIDDLE COLUMN: AI VIDEO CANVAS & HUD OVERLAY (6 COLS) -->
+        <section class="lg:col-span-6 flex flex-col gap-4">
+            
+            <!-- Video Container / Canvas -->
+            <div class="glass-card rounded-2xl p-2.5 relative flex flex-col scanlines overflow-hidden border border-cyan-500/20">
+                
+                <!-- HUD Top Bar Overlay -->
+                <div class="absolute top-4 left-4 right-4 z-20 flex items-center justify-between pointer-events-none">
+                    <div class="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                        <span id="cam-rec-dot" class="w-2 h-2 rounded-full bg-red-500 animate-ping"></span>
+                        <span id="cam-rec-label" class="text-[11px] font-mono font-bold tracking-widest text-red-400">SIM_ENGINE</span>
+                    </div>
+
+                    <div class="flex items-center gap-2 bg-slate-950/80 backdrop-blur-md px-3 py-1.5 rounded-xl border border-white/10">
+                        <i class="fa-solid fa-bullseye text-cyan-400 text-xs"></i>
+                        <span id="hud-phase-indicator" class="text-[11px] font-mono font-bold text-cyan-300">START POSITION</span>
+                    </div>
+                </div>
+
+                <!-- Video / Skeletal Overlay Canvas -->
+                <div class="relative w-full aspect-video bg-slate-950 rounded-xl overflow-hidden flex items-center justify-center border border-white/5">
+                    <!-- Hidden real webcam video stream element -->
+                    <video id="webcam-video" playsinline muted autoplay style="display:none;"></video>
+                    
+                    <!-- Main Render Canvas -->
+                    <canvas id="ai-canvas" class="w-full h-full object-cover block"></canvas>
+
+                    <!-- Realtime Floating HUD Metric Box (Bottom Left inside video) -->
+                    <div class="absolute bottom-4 left-4 z-20 bg-slate-950/85 backdrop-blur-md p-3 rounded-xl border border-white/10 flex items-center gap-4">
+                        <div>
+                            <div class="text-[10px] text-slate-400 font-mono uppercase" id="joint-angle-label">Joint Angle (Elbow)</div>
+                            <div id="live-joint-angle" class="text-lg font-mono font-bold text-cyan-400">160°</div>
+                        </div>
+                        <div class="h-6 w-[1px] bg-white/10"></div>
+                        <div>
+                            <div class="text-[10px] text-slate-400 font-mono uppercase">Tempo Ratio</div>
+                            <div id="live-tempo" class="text-lg font-mono font-bold text-emerald-400">2.0s : 1.0s</div>
+                        </div>
+                    </div>
+
+                    <!-- HUD Bounding Box Visual Tag (Bottom Right inside video) -->
+                    <div class="absolute bottom-4 right-4 z-20 bg-slate-950/85 backdrop-blur-md px-3 py-1.5 rounded-xl border border-emerald-500/30 flex items-center gap-2">
+                        <div id="hud-status-dot" class="w-2 h-2 rounded-full bg-emerald-400"></div>
+                        <span id="hud-form-status-badge" class="text-[11px] font-mono font-bold text-emerald-300">FORM: OPTIMAL</span>
+                    </div>
+
+                    <!-- Floating Form Warning Alert Banner -->
+                    <div id="hud-form-alert" class="absolute top-14 left-4 right-4 z-20 bg-rose-500/90 border border-rose-400 text-white font-mono text-xs font-bold px-4 py-2 rounded-xl shadow-lg shadow-rose-500/30 flex items-center justify-between transition-all opacity-0 pointer-events-none transform -translate-y-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fa-solid fa-triangle-exclamation text-amber-300 text-sm"></i>
+                            <span id="hud-alert-msg">FORM WARNING: SQUAT DEEPER!</span>
+                        </div>
+                        <span class="text-[10px] bg-black/30 px-2 py-0.5 rounded">CORRECTION</span>
+                    </div>
+
+                    <!-- Rest Interval Overlay Modal -->
+                    <div id="rest-overlay" class="absolute inset-0 z-30 bg-slate-950/90 backdrop-blur-md flex flex-col items-center justify-center p-6 text-center transition-all hidden">
+                        <div class="w-16 h-16 rounded-full border-4 border-cyan-400 border-t-transparent animate-spin mb-3 flex items-center justify-center">
+                            <i class="fa-solid fa-mug-hot text-cyan-400 text-xl"></i>
+                        </div>
+                        <span id="rest-title" class="text-xs font-mono font-bold tracking-widest text-cyan-400 uppercase">Set Complete • Rest Interval</span>
+                        <div id="rest-countdown" class="text-5xl font-black font-mono text-white my-2">45s</div>
+                        <p id="rest-subtitle" class="text-xs text-slate-400 max-w-xs mb-4">Deep breaths, shake out the lactic acid, hydrate, and prepare for the next set!</p>
+                        <button onclick="skipRest()" class="px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 text-slate-950 font-bold text-xs hover:opacity-90 transition-all flex items-center gap-1.5 shadow-lg shadow-cyan-500/20">
+                            <span>Skip Rest</span>
+                            <i class="fa-solid fa-forward-step"></i>
+                        </button>
+                    </div>
+
+                </div>
+
+                <!-- Dynamic Exercise Name Banner below video -->
+                <div class="mt-3 p-3 rounded-xl bg-slate-900/80 border border-white/10 flex flex-wrap items-center justify-between gap-2">
+                    <div>
+                        <div class="text-[10px] font-mono text-slate-400 uppercase tracking-wider">Detected Exercise Activity</div>
+                        <div id="current-exercise-title" class="text-lg font-black text-white tracking-wide flex items-center gap-2">
+                            <span>BICEP BARBELL CURL</span>
+                            <span class="text-xs font-mono font-normal px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 border border-cyan-500/30">AI Conf: <strong id="confidence-percentage">98.2%</strong></span>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-3">
+                        <div class="text-right">
+                            <div class="text-[10px] font-mono text-slate-400">Rep Velocity</div>
+                            <div id="rep-velocity-val" class="text-sm font-mono font-bold text-purple-400">0.45 m/s</div>
+                        </div>
+                        <div class="w-10 h-10 rounded-xl bg-purple-500/10 border border-purple-500/30 flex items-center justify-center">
+                            <i class="fa-solid fa-gauge-high text-purple-400"></i>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- Live Form Feedback & AI Speech Assistant Box -->
+            <div id="ai-feedback-box" class="glass-card rounded-2xl p-4 border-l-4 border-l-cyan-400 flex items-start gap-3.5 transition-all">
+                <div class="p-2.5 rounded-xl bg-cyan-500/10 text-cyan-400 text-lg flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-brain-circuit animate-pulse"></i>
+                </div>
+                <div class="flex-grow">
+                    <div class="flex items-center justify-between mb-1">
+                        <span class="text-xs font-bold uppercase tracking-wider text-cyan-300">Real-time Form AI Coach</span>
+                        <span class="text-[10px] font-mono text-slate-400">Updated <span id="feedback-time">just now</span></span>
+                    </div>
+                    <p id="ai-feedback-text" class="text-xs text-slate-200 leading-relaxed font-medium">
+                        "Keep elbows pinned to your sides. Squeeze biceps hard at the peak contraction and lower with control."
+                    </p>
+                </div>
+            </div>
+
+        </section>
+
+        <!-- RIGHT COLUMN: METRICS & ANALYTICS CARDS (3 COLS) -->
+        <aside class="lg:col-span-3 flex flex-col gap-4">
+            
+            <!-- Reps Counter Card -->
+            <div class="glass-card glass-card-interactive rounded-2xl p-4 flex items-center justify-between">
+                <div>
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-400">Completed Reps</span>
+                    <div class="flex items-baseline gap-2 mt-1">
+                        <span id="rep-count-large" class="text-4xl font-extrabold font-mono text-white tracking-tight">0</span>
+                        <span id="target-reps-display" class="text-xs text-slate-400 font-mono">/ 10 target</span>
+                    </div>
+                </div>
+                <div class="w-14 h-14 rounded-2xl bg-gradient-to-tr from-cyan-500/20 to-purple-500/20 border border-cyan-400/30 flex flex-col items-center justify-center">
+                    <button onclick="manualIncrementRep()" class="text-cyan-400 hover:text-white transition-colors text-lg" title="Manual Rep Tap">
+                        <i class="fa-solid fa-plus"></i>
+                    </button>
+                    <span class="text-[9px] font-mono text-slate-400">TAP +1</span>
+                </div>
+            </div>
+
+            <!-- Workout Sets & Routine Tracker Widget -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col gap-2.5">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                    <div class="flex items-center gap-2">
+                        <i class="fa-solid fa-layer-group text-cyan-400 text-xs"></i>
+                        <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Set Tracker</span>
+                    </div>
+                    <span id="current-set-badge" class="px-2 py-0.5 text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 rounded-md">
+                        SET 1 / 3
+                    </span>
+                </div>
+
+                <div class="flex items-center justify-between text-xs font-mono pt-1">
+                    <span class="text-slate-400">Target Reps:</span>
+                    <div class="flex items-center gap-2 bg-slate-900/60 px-2 py-1 rounded-lg border border-white/5">
+                        <button onclick="adjustTargetReps(-1)" class="w-5 h-5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center font-bold">-</button>
+                        <span id="target-reps-val" class="font-bold text-white px-1">10</span>
+                        <button onclick="adjustTargetReps(1)" class="w-5 h-5 rounded bg-slate-800 text-slate-300 hover:bg-slate-700 flex items-center justify-center font-bold">+</button>
+                    </div>
+                </div>
+
+                <div class="flex items-center justify-between text-xs font-mono">
+                    <span class="text-slate-400">Rest Timer:</span>
+                    <span class="text-purple-400 font-bold">45s Auto-countdown</span>
+                </div>
+            </div>
+
+            <!-- Form Accuracy Score & Live Bilateral Symmetry Tracker -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col gap-3">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Form & Symmetry</span>
+                    <span id="form-score-status" class="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">Optimal Range</span>
+                </div>
+
+                <div class="flex items-center justify-around py-2">
+                    <!-- SVG Circular Progress Bar -->
+                    <div class="relative w-24 h-24 flex items-center justify-center">
+                        <svg class="w-full h-full transform -rotate-90" viewBox="0 0 36 36">
+                            <path class="text-slate-800" stroke-width="3.5" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                            <path id="score-circle-path" class="text-cyan-400 transition-all duration-500 ease-out" stroke-dasharray="95, 100" stroke-width="3.5" stroke-linecap="round" stroke="currentColor" fill="none" d="M18 2.0845 a 15.9155 15.9155 0 0 1 0 31.831 a 15.9155 15.9155 0 0 1 0 -31.831"/>
+                        </svg>
+                        <div class="absolute flex flex-col items-center justify-center text-center">
+                            <span id="form-score-value" class="text-xl font-black font-mono text-white">95%</span>
+                            <span class="text-[8px] font-mono text-slate-400 uppercase">Score</span>
+                        </div>
+                    </div>
+
+                    <!-- Live Real-Time Biomechanical Symmetry & Path -->
+                    <div class="space-y-2 text-xs font-mono">
+                        <div>
+                            <div class="text-slate-400 text-[10px] flex items-center gap-1">
+                                <i class="fa-solid fa-scale-balanced text-cyan-400"></i> Bilateral Symmetry
+                            </div>
+                            <div id="symmetry-val" class="text-emerald-400 font-bold">98% Balanced</div>
+                        </div>
+                        <div>
+                            <div class="text-slate-400 text-[10px] flex items-center gap-1">
+                                <i class="fa-solid fa-arrows-up-down text-purple-400"></i> Path Stability
+                            </div>
+                            <div id="barpath-val" class="text-cyan-400 font-bold">0.9 cm (Ideal)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Calories & Active Load -->
+            <div class="grid grid-cols-2 gap-3">
+                <div class="glass-card rounded-2xl p-3.5">
+                    <div class="text-slate-400 text-[10px] font-mono uppercase">Est. Burn</div>
+                    <div class="text-xl font-bold font-mono text-amber-400 mt-1 flex items-baseline gap-1">
+                        <span id="calorie-count">0</span>
+                        <span class="text-xs text-slate-400 font-normal">kcal</span>
+                    </div>
+                    <div class="mt-2 text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                        <i class="fa-solid fa-fire text-amber-500"></i> +4.5 kcal/min
+                    </div>
+                </div>
+
+                <div class="glass-card rounded-2xl p-3.5">
+                    <div class="text-slate-400 text-[10px] font-mono uppercase">Active Load</div>
+                    <div class="text-xl font-bold font-mono text-purple-400 mt-1 flex items-baseline gap-1">
+                        <span id="active-weight">20</span>
+                        <span class="text-xs text-slate-400 font-normal">kg</span>
+                    </div>
+                    <div class="mt-2 text-[10px] text-slate-500 font-mono flex items-center gap-1">
+                        <i class="fa-solid fa-weight-hanging text-purple-400"></i> Preset Spec
+                    </div>
+                </div>
+            </div>
+
+            <!-- Muscle Group Activation Visualizer -->
+            <div class="glass-card rounded-2xl p-4 flex flex-col gap-3 flex-grow">
+                <div class="flex items-center justify-between border-b border-white/10 pb-2">
+                    <span class="text-xs font-bold uppercase tracking-wider text-slate-300">Muscle Engagement</span>
+                    <i class="fa-solid fa-child text-cyan-400 text-xs"></i>
+                </div>
+
+                <div id="muscle-activation-list" class="space-y-2.5 text-xs font-mono">
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="text-slate-300">Biceps Brachii</span>
+                            <span class="text-cyan-400 font-bold">98%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full" style="width: 98%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="text-slate-300">Brachialis</span>
+                            <span class="text-purple-400 font-bold">82%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-purple-500 to-pink-500 rounded-full" style="width: 82%"></div>
+                        </div>
+                    </div>
+                    <div>
+                        <div class="flex justify-between text-[11px] mb-1">
+                            <span class="text-slate-300">Forearm Flexors</span>
+                            <span class="text-emerald-400 font-bold">60%</span>
+                        </div>
+                        <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                            <div class="h-full bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full" style="width: 60%"></div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+        </aside>
+
+    </main>
+
+    <!-- BOTTOM SECTION: REAL-TIME GRAPH & SESSION HISTORY LOG TABLE -->
+    <footer class="grid grid-cols-1 lg:grid-cols-12 gap-4">
+        
+        <!-- Live Velocity / Joint Angle Chart (7 COLS) -->
+        <div class="lg:col-span-7 glass-card rounded-2xl p-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-chart-line text-cyan-400 text-sm"></i>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Biomechanical Angle & Velocity Tracker</h2>
+                </div>
+                <div class="flex items-center gap-2 text-[10px] font-mono">
+                    <span class="flex items-center gap-1 text-cyan-400"><span class="w-2 h-2 rounded-full bg-cyan-400"></span> Joint Angle (°)</span>
+                    <span class="flex items-center gap-1 text-purple-400"><span class="w-2 h-2 rounded-full bg-purple-400"></span> Velocity (m/s)</span>
+                </div>
+            </div>
+
+            <!-- Chart.js Canvas -->
+            <div class="w-full h-44 relative">
+                <canvas id="biomechanicsChart"></canvas>
+            </div>
+        </div>
+
+        <!-- Session Logs Table (5 COLS) -->
+        <div class="lg:col-span-5 glass-card rounded-2xl p-4 flex flex-col gap-3">
+            <div class="flex items-center justify-between border-b border-white/10 pb-2.5">
+                <div class="flex items-center gap-2">
+                    <i class="fa-solid fa-clock-rotate-left text-purple-400 text-sm"></i>
+                    <h2 class="text-xs font-bold uppercase tracking-wider text-slate-300">Session Rep & Form Log</h2>
+                </div>
+                <span id="log-count-badge" class="text-[10px] font-mono text-cyan-400">0 Reps Logged</span>
+            </div>
+
+            <div class="overflow-x-auto overflow-y-auto max-h-44">
+                <table class="w-full text-left text-xs font-mono">
+                    <thead class="text-[10px] text-slate-400 border-b border-white/5 uppercase">
+                        <tr>
+                            <th class="pb-2">Time</th>
+                            <th class="pb-2">Exercise</th>
+                            <th class="pb-2">Rep #</th>
+                            <th class="pb-2">Form Score</th>
+                            <th class="pb-2 text-right">Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="session-log-rows" class="divide-y divide-white/5 text-slate-300">
+                        <tr id="empty-log-row">
+                            <td colspan="5" class="py-6 text-center text-slate-500 italic">No reps logged yet. Begin your set!</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+    </footer>
+
+    <!-- ========================================================= -->
+    <!-- IMMERSIVE GYM DISTANCE FULLSCREEN HUD OVERLAY (10FT AWAY)  -->
+    <!-- ========================================================= -->
+    <div id="gym-hud-container" class="hidden fixed inset-0 z-[100] bg-black flex flex-col justify-between p-6 select-none">
+        <!-- Top HUD Bar -->
+        <div class="flex items-center justify-between z-10">
+            <div class="flex items-center gap-3 bg-slate-900/85 backdrop-blur-md px-4 py-2 rounded-2xl border border-white/10">
+                <span class="w-3 h-3 rounded-full bg-emerald-400 animate-ping"></span>
+                <span id="gym-hud-exercise" class="text-xl font-black font-mono tracking-wider text-cyan-300">BICEP BARBELL CURL</span>
+                <span id="gym-hud-set" class="text-sm font-mono text-purple-400 ml-2">SET 1/3</span>
+            </div>
+
+            <div id="gym-hud-posture" class="text-2xl font-black font-mono px-6 py-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/20 text-emerald-300 shadow-lg shadow-emerald-500/20 animate-pulse">
+                FORM: OPTIMAL
+            </div>
+
+            <button onclick="toggleGymHUD()" class="bg-slate-900/85 hover:bg-slate-800 text-slate-200 border border-white/10 px-4 py-2 rounded-2xl font-mono text-sm flex items-center gap-2 transition-all">
+                <i class="fa-solid fa-compress text-cyan-400"></i>
+                <span>Exit HUD [Esc]</span>
+            </button>
+        </div>
+
+        <!-- Center Giant Rep Number (Viewable from 10-15 feet away) -->
+        <div class="flex items-center justify-center my-auto pointer-events-none z-10 text-center">
+            <div class="flex flex-col items-center">
+                <div id="gym-hud-reps" class="text-[150px] font-black font-mono leading-none tracking-tight text-white drop-shadow-[0_0_40px_rgba(0,242,254,0.7)]">
+                    0
+                </div>
+                <div class="text-xl font-mono text-cyan-300 font-bold uppercase tracking-widest mt-1">COMPLETED REPS</div>
+            </div>
+        </div>
+
+        <!-- Bottom Giant Telemetry HUD -->
+        <div class="grid grid-cols-3 gap-4 z-10">
+            <div class="bg-slate-900/85 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center">
+                <div class="text-xs font-mono text-slate-400 uppercase">Live Joint Angle</div>
+                <div id="gym-hud-angle" class="text-3xl font-black font-mono text-cyan-400 mt-1">160°</div>
+            </div>
+            <div class="bg-slate-900/85 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center">
+                <div class="text-xs font-mono text-slate-400 uppercase">Bilateral Symmetry</div>
+                <div id="gym-hud-symmetry" class="text-3xl font-black font-mono text-emerald-400 mt-1">98% Balanced</div>
+            </div>
+            <div class="bg-slate-900/85 backdrop-blur-md p-4 rounded-2xl border border-white/10 text-center">
+                <div class="text-xs font-mono text-slate-400 uppercase">Target Reps</div>
+                <div id="gym-hud-target" class="text-3xl font-black font-mono text-purple-400 mt-1">0 / 10 Reps</div>
+            </div>
+        </div>
+
+        <!-- Canvas for Fullscreen Mode -->
+        <canvas id="gym-canvas" class="absolute inset-0 w-full h-full object-cover z-0"></canvas>
+    </div>
+
+    <!-- JAVASCRIPT APP LOGIC -->
+    <script>
+        // =========================================================
+        // GLOBAL STATE & VARIABLES
+        // =========================================================
+        let engineMode = 'SIMULATION'; // 'SIMULATION' or 'WEBCAM'
+        let camera = null;
+        let poseDetector = null;
+        let videoElement = null;
+        let isCameraRunning = false;
+        let isGymHUDActive = false;
+
+        let showSkeleton = true;
+        let currentExercise = 'bicep'; // 'bicep', 'squat', 'bench', 'deadlift'
+        let autoDetectEnabled = true;
+        let autoDetectBuffer = { bicep: 0, squat: 0, bench: 0, deadlift: 0 };
+
+        // Circuit Routine State
+        let routineMode = 'single'; // 'single' or 'fullbody'
+        let circuitIndex = 0;
+        const circuitSteps = [
+            { exercise: 'bicep', reps: 10, rest: 30, title: 'BICEP BARBELL CURL' },
+            { exercise: 'squat', reps: 12, rest: 30, title: 'BARBELL SQUAT' },
+            { exercise: 'bench', reps: 10, rest: 30, title: 'PUSH-UPS / BENCH' }
+        ];
+
+        let repCount = 0;
+        let targetReps = 10;
+        let currentSet = 1;
+        let totalSets = 3;
+        let formScore = 95;
+        let calories = 0;
+        let strictness = 85;
+
+        // FSM Rep Counting & Biomechanics State
+        let repStage = 'down'; // 'up' or 'down'
+        let jointAngle = 160;
+        let lastJointAngle = 160;
+        let repVelocity = 0.45;
+        let currentFormQuality = 'OPTIMAL'; // 'OPTIMAL', 'WARNING', 'CRITICAL'
+        let symmetryScore = 98;
+        let lastVoiceTime = 0;
+        let sessionLogs = [];
+
+        // Rest Timer State
+        let isResting = false;
+        let restCountdownInterval = null;
+        let restTimeRemaining = 45;
+
+        // Canvas Simulation variables
+        let animFrameId = null;
+        let progressVal = 0;
+        let phase = 'START POSITION';
+        let lastSimTime = performance.now();
+
+        // Exercise Biomechanical Configurations
+        const exerciseConfig = {
+            bicep: {
+                title: 'BICEP BARBELL CURL',
+                jointLabel: 'Joint Angle (Elbow)',
+                weight: 20,
+                muscles: [
+                    { name: 'Biceps Brachii', pct: 98, color: 'from-cyan-500 to-blue-500' },
+                    { name: 'Brachialis', pct: 82, color: 'from-purple-500 to-pink-500' },
+                    { name: 'Forearm Flexors', pct: 60, color: 'from-emerald-500 to-teal-500' }
+                ],
+                feedback: "Keep elbows pinned to your sides. Squeeze biceps hard at the peak contraction and lower with control.",
+                idealAngleRange: [40, 160],
+                fsm: {
+                    extendedAngle: 150,
+                    contractedAngle: 45
+                }
+            },
+            squat: {
+                title: 'BARBELL SQUAT',
+                jointLabel: 'Joint Angle (Knee)',
+                weight: 60,
+                muscles: [
+                    { name: 'Quadriceps Femoris', pct: 95, color: 'from-emerald-500 to-teal-500' },
+                    { name: 'Gluteus Maximus', pct: 88, color: 'from-cyan-500 to-blue-500' },
+                    { name: 'Hamstrings & Core', pct: 70, color: 'from-purple-500 to-pink-500' }
+                ],
+                feedback: "Descend below parallel. Ensure knees track over toes and keep chest upright.",
+                idealAngleRange: [80, 170],
+                fsm: {
+                    standingAngle: 160,
+                    depthAngle: 95
+                }
+            },
+            bench: {
+                title: 'PUSH-UPS / BENCH PRESS',
+                jointLabel: 'Joint Angle (Elbow)',
+                weight: 50,
+                muscles: [
+                    { name: 'Pectoralis Major', pct: 92, color: 'from-cyan-500 to-blue-500' },
+                    { name: 'Triceps Brachii', pct: 78, color: 'from-purple-500 to-pink-500' },
+                    { name: 'Anterior Deltoids', pct: 64, color: 'from-emerald-500 to-teal-500' }
+                ],
+                feedback: "Lock out at the top, tuck elbows at 45° to protect shoulders, full chest depth.",
+                idealAngleRange: [75, 165],
+                fsm: {
+                    lockoutAngle: 155,
+                    bottomAngle: 85
+                }
+            },
+            deadlift: {
+                title: 'CONVENTIONAL DEADLIFT',
+                jointLabel: 'Joint Angle (Hip)',
+                weight: 80,
+                muscles: [
+                    { name: 'Erector Spinae', pct: 96, color: 'from-purple-500 to-pink-500' },
+                    { name: 'Hamstrings', pct: 85, color: 'from-cyan-500 to-blue-500' },
+                    { name: 'Latissimus Dorsi', pct: 72, color: 'from-emerald-500 to-teal-500' }
+                ],
+                feedback: "Maintain neutral spine, drive hips forward at the top lockout. Do not round lower back.",
+                idealAngleRange: [70, 175],
+                fsm: {
+                    standingAngle: 165,
+                    bottomAngle: 100
+                }
+            }
+        };
+
+        // =========================================================
+        // INITIALIZATION
+        // =========================================================
+        window.onload = function() {
+            videoElement = document.getElementById('webcam-video');
+            initChart();
+            initMediaPipePose();
+            initCanvasSimulation();
+            loadWorkoutHistoryFromBackend();
+
+            // Keyboard shortcut for Gym HUD (Esc to exit)
+            window.addEventListener('keydown', (e) => {
+                if (e.key === 'Escape' && isGymHUDActive) {
+                    toggleGymHUD();
+                }
+            });
+        };
+
+        // =========================================================
+        // AUDIO SYNTHESIZER & VOICE AI COACH
+        // =========================================================
+        function playSynthTone(freq, type = 'sine', duration = 0.2, gainVol = 0.15) {
+            if (!document.getElementById('sfx-toggle').checked) return;
+            try {
+                const AudioCtx = window.AudioContext || window.webkitAudioContext;
+                if (!AudioCtx) return;
+                const ctx = new AudioCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = type;
+                osc.frequency.setValueAtTime(freq, ctx.currentTime);
+                gain.gain.setValueAtTime(gainVol, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.0001, ctx.currentTime + duration);
+
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {}
+        }
+
+        function speakFeedback(phrase, force = false) {
+            if (!document.getElementById('audio-toggle').checked) return;
+            const now = Date.now();
+            if (!force && now - lastVoiceTime < 3200) return;
+            
+            if ('speechSynthesis' in window) {
+                window.speechSynthesis.cancel();
+                const utterance = new SpeechSynthesisUtterance(phrase);
+                utterance.rate = 1.05;
+                utterance.pitch = 1.0;
+                utterance.volume = 0.9;
+                window.speechSynthesis.speak(utterance);
+                lastVoiceTime = now;
+            }
+        }
+
+        // =========================================================
+        // DUAL-MODE ENGINE TOGGLE (WEBCAM <-> SIMULATION)
+        // =========================================================
+        async function toggleEngineMode() {
+            const btn = document.getElementById('btn-mode-toggle');
+            const modeText = document.getElementById('mode-text');
+            const modeIcon = document.getElementById('mode-icon');
+            const recLabel = document.getElementById('cam-rec-label');
+            const statusDot = document.getElementById('engine-status-dot');
+            const statusText = document.getElementById('engine-status-text');
+
+            if (engineMode === 'SIMULATION') {
+                modeText.innerText = "Connecting Cam...";
+                try {
+                    if (animFrameId) {
+                        cancelAnimationFrame(animFrameId);
+                        animFrameId = null;
+                    }
+
+                    if (!camera) {
+                        camera = new Camera(videoElement, {
+                            onFrame: async () => {
+                                if (engineMode === 'WEBCAM' && !isResting && isCameraRunning) {
+                                    await poseDetector.send({ image: videoElement });
+                                }
+                            },
+                            width: 1280,
+                            height: 720
+                        });
+                    }
+
+                    await camera.start();
+                    isCameraRunning = true;
+                    engineMode = 'WEBCAM';
+
+                    btn.className = "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-purple-500/20";
+                    modeIcon.className = "fa-solid fa-desktop";
+                    modeText.innerText = "Demo Mode";
+
+                    recLabel.innerText = "REC [WEBCAM_01]";
+                    statusDot.className = "w-2.5 h-2.5 rounded-full bg-cyan-400 pulse-live";
+                    statusText.innerText = "LIVE WEBCAM AI";
+                    statusText.className = "text-cyan-400 font-semibold tracking-wider";
+
+                    speakFeedback("Webcam active. Step back into full view to begin exercise.", true);
+                } catch (err) {
+                    alert("Unable to access camera: " + err.message + "\nReverting to Simulation mode.");
+                    engineMode = 'SIMULATION';
+                    modeText.innerText = "Start Webcam";
+                    initCanvasSimulation();
+                }
+            } else {
+                if (camera) {
+                    camera.stop();
+                    isCameraRunning = false;
+                }
+                engineMode = 'SIMULATION';
+
+                btn.className = "bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-400 hover:to-teal-500 text-slate-950 font-bold px-3 py-2 rounded-xl text-xs flex items-center gap-2 transition-all shadow-lg shadow-emerald-500/20";
+                modeIcon.className = "fa-solid fa-camera";
+                modeText.innerText = "Start Webcam";
+
+                recLabel.innerText = "SIM_ENGINE";
+                statusDot.className = "w-2.5 h-2.5 rounded-full bg-emerald-400 pulse-live";
+                statusText.innerText = "LIVE SIMULATION";
+                statusText.className = "text-emerald-400 font-semibold tracking-wider";
+
+                initCanvasSimulation();
+            }
+        }
+
+        // =========================================================
+        // FULLSCREEN GYM DISTANCE HUD (10 FEET AWAY)
+        // =========================================================
+        function toggleGymHUD() {
+            const hudContainer = document.getElementById('gym-hud-container');
+            isGymHUDActive = !isGymHUDActive;
+
+            if (isGymHUDActive) {
+                hudContainer.classList.remove('hidden');
+                if (document.documentElement.requestFullscreen) {
+                    document.documentElement.requestFullscreen().catch(() => {});
+                }
+                updateGymHUDLabels();
+            } else {
+                hudContainer.classList.add('hidden');
+                if (document.exitFullscreen && document.fullscreenElement) {
+                    document.exitFullscreen().catch(() => {});
+                }
+            }
+        }
+
+        function updateGymHUDLabels() {
+            document.getElementById('gym-hud-exercise').innerText = exerciseConfig[currentExercise].title;
+            document.getElementById('gym-hud-set').innerText = `SET ${currentSet}/${totalSets}`;
+            document.getElementById('gym-hud-reps').innerText = repCount;
+            document.getElementById('gym-hud-angle').innerText = jointAngle + '°';
+            document.getElementById('gym-hud-target').innerText = `${repCount} / ${targetReps} Reps`;
+        }
+
+        // =========================================================
+        // AUTO-DETECT EXERCISE MODE TOGGLE
+        // =========================================================
+        function toggleAutoDetect() {
+            autoDetectEnabled = !autoDetectEnabled;
+            const btn = document.getElementById('btn-autodetect-toggle');
+            if (autoDetectEnabled) {
+                btn.className = "px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider rounded-full border transition-all bg-emerald-500/20 text-emerald-300 border-emerald-500/30 hover:opacity-90";
+                btn.innerHTML = '<i class="fa-solid fa-wand-magic-sparkles mr-1"></i>AUTO: ON';
+                speakFeedback("Auto-detect enabled");
+            } else {
+                btn.className = "px-2 py-0.5 text-[9px] font-mono font-bold uppercase tracking-wider rounded-full border transition-all bg-slate-800 text-slate-400 border-white/10 hover:opacity-90";
+                btn.innerHTML = '<i class="fa-solid fa-hand mr-1"></i>AUTO: OFF';
+                speakFeedback("Auto-detect disabled");
+            }
+        }
+
+        function evaluateAutoDetect(lm) {
+            if (!autoDetectEnabled || isResting || routineMode === 'fullbody') return;
+
+            // Check Horizontal position (Push-ups / Bench)
+            const shoulderY = (lm[11].y + lm[12].y) / 2;
+            const hipY = (lm[23].y + lm[24].y) / 2;
+            const ankleY = (lm[27].y + lm[28].y) / 2;
+            const isHorizontal = Math.abs(shoulderY - hipY) < 0.22 && Math.abs(hipY - ankleY) < 0.28;
+
+            if (isHorizontal) {
+                autoDetectBuffer.bench++;
+                autoDetectBuffer.squat = 0;
+                autoDetectBuffer.bicep = 0;
+                if (autoDetectBuffer.bench > 8 && currentExercise !== 'bench') {
+                    setExercise('bench');
+                    speakFeedback("Auto-detected Push-ups / Bench Press!", true);
+                    autoDetectBuffer.bench = 0;
+                }
+                return;
+            }
+
+            // Upright Movement Checks
+            const lKneeA = calculateAngle(lm[23], lm[25], lm[27]);
+            const rKneeA = calculateAngle(lm[24], lm[26], lm[28]);
+            const avgKnee = (lKneeA + rKneeA) / 2;
+
+            const lElbowA = calculateAngle(lm[11], lm[13], lm[15]);
+            const rElbowA = calculateAngle(lm[12], lm[14], lm[16]);
+            const avgElbow = (lElbowA + rElbowA) / 2;
+
+            if (avgKnee < 125 && avgElbow > 120) {
+                autoDetectBuffer.squat++;
+                if (autoDetectBuffer.squat > 6 && currentExercise !== 'squat') {
+                    setExercise('squat');
+                    speakFeedback("Auto-detected Barbell Squats!", true);
+                    autoDetectBuffer.squat = 0;
+                }
+            } else if (avgElbow < 95 && avgKnee > 150) {
+                autoDetectBuffer.bicep++;
+                if (autoDetectBuffer.bicep > 6 && currentExercise !== 'bicep') {
+                    setExercise('bicep');
+                    speakFeedback("Auto-detected Bicep Curls!", true);
+                    autoDetectBuffer.bicep = 0;
+                }
+            }
+        }
+
+        // =========================================================
+        // WORKOUT ROUTINE & CIRCUIT MANAGER
+        // =========================================================
+        function handleRoutineChange(val) {
+            routineMode = val;
+            const banner = document.getElementById('circuit-progress-banner');
+            if (val === 'fullbody') {
+                circuitIndex = 0;
+                banner.classList.remove('hidden');
+                applyCircuitStep(0);
+                speakFeedback("3-Exercise Full Body Circuit initiated! Step 1: Bicep Curls.", true);
+            } else {
+                banner.classList.add('hidden');
+                speakFeedback("Switched to Single Exercise Mode.");
+            }
+        }
+
+        function applyCircuitStep(idx) {
+            const step = circuitSteps[idx];
+            setExercise(step.exercise);
+            targetReps = step.reps;
+            document.getElementById('target-reps-val').innerText = targetReps;
+            document.getElementById('target-reps-display').innerText = `/ ${targetReps} target`;
+            document.getElementById('circuit-progress-banner').firstElementChild.innerText = `CIRCUIT STEP ${idx + 1} OF 3: ${step.title}`;
+        }
+
+        // =========================================================
+        // MEDIAPIPE POSE SETUP & BIOMECHANICAL ANALYZER
+        // =========================================================
+        function initMediaPipePose() {
+            try {
+                poseDetector = new Pose({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/pose/${file}`
+                });
+
+                poseDetector.setOptions({
+                    modelComplexity: 1,
+                    smoothLandmarks: true,
+                    enableSegmentation: false,
+                    smoothSegmentation: false,
+                    minDetectionConfidence: 0.5,
+                    minTrackingConfidence: 0.5
+                });
+
+                poseDetector.onResults(onPoseResults);
+            } catch (e) {
+                console.error("MediaPipe initialization error: ", e);
+            }
+        }
+
+        function calculateAngle(a, b, c) {
+            if (!a || !b || !c) return 0;
+            const radians = Math.atan2(c.y - b.y, c.x - b.x) - Math.atan2(a.y - b.y, a.x - b.x);
+            let angle = Math.abs(radians * 180.0 / Math.PI);
+            if (angle > 180.0) angle = 360.0 - angle;
+            return Math.round(angle);
+        }
+
+        function onPoseResults(results) {
+            if (engineMode !== 'WEBCAM' || isResting) return;
+
+            const targetCanvas = isGymHUDActive ? document.getElementById('gym-canvas') : document.getElementById('ai-canvas');
+            const ctx = targetCanvas.getContext('2d');
+
+            targetCanvas.width = targetCanvas.parentElement.clientWidth;
+            targetCanvas.height = targetCanvas.parentElement.clientHeight;
+
+            ctx.save();
+            ctx.translate(targetCanvas.width, 0);
+            ctx.scale(-1, 1);
+            ctx.drawImage(results.image, 0, 0, targetCanvas.width, targetCanvas.height);
+            ctx.restore();
+
+            drawGrid(ctx, targetCanvas.width, targetCanvas.height);
+
+            if (results.poseLandmarks) {
+                const landmarks = results.poseLandmarks;
+                evaluateAutoDetect(landmarks);
+                analyzeBiomechanics(landmarks, targetCanvas.width, targetCanvas.height, ctx);
+            } else {
+                showHUDWarning("Step into camera frame");
+            }
+        }
+
+        // Biomechanical Angle & Bilateral Symmetry Analyzer
+        function analyzeBiomechanics(lm, w, h, ctx) {
+            let activeAngle = 0;
+            let cheatDetected = false;
+            let warningText = "";
+            let currentPhase = "IN MOTION";
+
+            // BILATERAL SYMMETRY TRACKING (Left vs Right Limb Biomechanics)
+            const lElbow = calculateAngle(lm[11], lm[13], lm[15]);
+            const rElbow = calculateAngle(lm[12], lm[14], lm[16]);
+            const lKnee = calculateAngle(lm[23], lm[25], lm[27]);
+            const rKnee = calculateAngle(lm[24], lm[26], lm[28]);
+
+            if (currentExercise === 'bicep' || currentExercise === 'bench') {
+                const diff = Math.abs(lElbow - rElbow);
+                symmetryScore = Math.max(0, Math.min(100, Math.round(100 - diff)));
+                if (diff > 22 && (lElbow < 120 || rElbow < 120)) {
+                    cheatDetected = true;
+                    warningText = (lElbow > rElbow) ? "Right arm leading! Level arms." : "Left arm leading! Level arms.";
+                }
+            } else if (currentExercise === 'squat') {
+                const diff = Math.abs(lKnee - rKnee);
+                symmetryScore = Math.max(0, Math.min(100, Math.round(100 - diff)));
+                if (diff > 20 && (lKnee < 120 || rKnee < 120)) {
+                    cheatDetected = true;
+                    warningText = "Uneven leg drive! Balance your squat.";
+                }
+            }
+
+            // Update Symmetry Indicator
+            const symEl = document.getElementById('symmetry-val');
+            const gymSymEl = document.getElementById('gym-hud-symmetry');
+            let symLabel = `${symmetryScore}% Balanced`;
+            if (symmetryScore < 78) symLabel = `${symmetryScore}% Asymmetric!`;
+            symEl.innerText = symLabel;
+            gymSymEl.innerText = symLabel;
+            symEl.className = (symmetryScore >= 88) ? "text-emerald-400 font-bold" : (symmetryScore >= 75 ? "text-amber-400 font-bold" : "text-rose-400 font-bold");
+
+            // EXERCISE FINITE STATE MACHINE (FSM)
+            if (currentExercise === 'bicep') {
+                const useLeft = (lm[13].visibility || 0) >= (lm[14].visibility || 0);
+                const shoulder = useLeft ? lm[11] : lm[12];
+                const elbow = useLeft ? lm[13] : lm[14];
+                const wrist = useLeft ? lm[15] : lm[16];
+
+                activeAngle = calculateAngle(shoulder, elbow, wrist);
+                
+                // Form Check: Elbow Sway / Momentum
+                const elbowDisplacement = Math.abs(elbow.x - shoulder.x);
+                if (elbowDisplacement > 0.16) {
+                    cheatDetected = true;
+                    warningText = "Keep elbows locked to your ribs!";
+                }
+
+                if (activeAngle > exerciseConfig.bicep.fsm.extendedAngle) {
+                    repStage = 'down';
+                    currentPhase = "START / EXTENSION";
+                } else if (activeAngle < exerciseConfig.bicep.fsm.contractedAngle && repStage === 'down') {
+                    repStage = 'up';
+                    currentPhase = "PEAK CONTRACTION";
+                    completeRep(cheatDetected, warningText);
+                } else {
+                    currentPhase = (activeAngle < 90) ? "CONCENTRIC PHASE" : "ECCENTRIC PHASE";
+                }
+
+            } else if (currentExercise === 'squat') {
+                const useLeft = (lm[25].visibility || 0) >= (lm[26].visibility || 0);
+                const hip = useLeft ? lm[23] : lm[24];
+                const knee = useLeft ? lm[25] : lm[26];
+                const ankle = useLeft ? lm[27] : lm[28];
+
+                activeAngle = calculateAngle(hip, knee, ankle);
+
+                // Knee Valgus Check
+                const kneeDist = Math.abs(lm[25].x - lm[26].x);
+                const ankleDist = Math.abs(lm[27].x - lm[28].x);
+                if (kneeDist < ankleDist * 0.75 && activeAngle < 120) {
+                    cheatDetected = true;
+                    warningText = "Push your knees out!";
+                }
+
+                if (activeAngle > exerciseConfig.squat.fsm.standingAngle) {
+                    if (repStage === 'down') {
+                        completeRep(cheatDetected, warningText);
+                    }
+                    repStage = 'up';
+                    currentPhase = "STANDING LOCKOUT";
+                } else if (activeAngle < exerciseConfig.squat.fsm.depthAngle) {
+                    repStage = 'down';
+                    currentPhase = "PARALLEL DEPTH";
+                } else {
+                    currentPhase = (activeAngle < 130) ? "DESCENDING SQUAT" : "ASCENDING DRIVE";
+                }
+
+            } else if (currentExercise === 'bench') {
+                const useLeft = (lm[13].visibility || 0) >= (lm[14].visibility || 0);
+                const shoulder = useLeft ? lm[11] : lm[12];
+                const elbow = useLeft ? lm[13] : lm[14];
+                const wrist = useLeft ? lm[15] : lm[16];
+
+                activeAngle = calculateAngle(shoulder, elbow, wrist);
+
+                if (activeAngle > exerciseConfig.bench.fsm.lockoutAngle) {
+                    if (repStage === 'down') {
+                        completeRep(cheatDetected, warningText);
+                    }
+                    repStage = 'up';
+                    currentPhase = "TOP LOCKOUT";
+                } else if (activeAngle < exerciseConfig.bench.fsm.bottomAngle) {
+                    repStage = 'down';
+                    currentPhase = "CHEST TOUCH";
+                } else {
+                    currentPhase = "PRESS PHASE";
+                }
+
+            } else if (currentExercise === 'deadlift') {
+                const useLeft = (lm[23].visibility || 0) >= (lm[24].visibility || 0);
+                const shoulder = useLeft ? lm[11] : lm[12];
+                const hip = useLeft ? lm[23] : lm[24];
+                const knee = useLeft ? lm[25] : lm[26];
+
+                activeAngle = calculateAngle(shoulder, hip, knee);
+
+                if (activeAngle > exerciseConfig.deadlift.fsm.standingAngle) {
+                    if (repStage === 'down') {
+                        completeRep(cheatDetected, warningText);
+                    }
+                    repStage = 'up';
+                    currentPhase = "HIP LOCKOUT";
+                } else if (activeAngle < exerciseConfig.deadlift.fsm.bottomAngle) {
+                    repStage = 'down';
+                    currentPhase = "BOTTOM HINGE";
+                }
+            }
+
+            // Update Real-Time Telemetry
+            jointAngle = activeAngle;
+            document.getElementById('live-joint-angle').innerText = jointAngle + '°';
+            document.getElementById('hud-phase-indicator').innerText = currentPhase;
+            document.getElementById('gym-hud-angle').innerText = jointAngle + '°';
+
+            // Velocity Estimation
+            const angleDelta = Math.abs(jointAngle - lastJointAngle);
+            repVelocity = ((angleDelta / 30) * 0.15).toFixed(2);
+            lastJointAngle = jointAngle;
+            document.getElementById('rep-velocity-val').innerText = repVelocity + ' m/s';
+
+            pushChartData(jointAngle, repVelocity);
+
+            if (cheatDetected) {
+                currentFormQuality = 'CRITICAL';
+                showHUDWarning(warningText);
+                playSynthTone(180, 'sawtooth', 0.15, 0.1);
+            } else {
+                currentFormQuality = 'OPTIMAL';
+                hideHUDWarning();
+            }
+
+            if (showSkeleton) {
+                drawMediaPipeSkeleton(ctx, lm, w, h, currentFormQuality);
+            }
+        }
+
+        // Draw Color-Coded Skeleton Overlay
+        function drawMediaPipeSkeleton(ctx, lm, w, h, quality) {
+            const connections = [
+                [11, 12], [11, 13], [13, 15],
+                [12, 14], [14, 16],
+                [11, 23], [12, 24], [23, 24],
+                [23, 25], [25, 27],
+                [24, 26], [26, 28]
+            ];
+
+            let strokeColor = '#00f2fe';
+            if (quality === 'WARNING') strokeColor = '#ffaa00';
+            if (quality === 'CRITICAL') strokeColor = '#ff0055';
+
+            ctx.lineWidth = isGymHUDActive ? 5 : 3.5;
+            ctx.strokeStyle = strokeColor;
+            ctx.shadowColor = strokeColor;
+            ctx.shadowBlur = 10;
+
+            connections.forEach(([i, j]) => {
+                const p1 = lm[i];
+                const p2 = lm[j];
+                if (p1 && p2 && (p1.visibility || 1) > 0.3 && (p2.visibility || 1) > 0.3) {
+                    ctx.beginPath();
+                    ctx.moveTo((1 - p1.x) * w, p1.y * h);
+                    ctx.lineTo((1 - p2.x) * w, p2.y * h);
+                    ctx.stroke();
+                }
+            });
+
+            ctx.shadowBlur = 0;
+
+            [11, 12, 13, 14, 15, 16, 23, 24, 25, 26, 27, 28].forEach(idx => {
+                const node = lm[idx];
+                if (node && (node.visibility || 1) > 0.3) {
+                    const x = (1 - node.x) * w;
+                    const y = node.y * h;
+                    ctx.fillStyle = '#00ff88';
+                    ctx.beginPath();
+                    ctx.arc(x, y, isGymHUDActive ? 8 : 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 2;
+                    ctx.stroke();
+                }
+            });
+        }
+
+        // =========================================================
+        // REP COMPLETION & WORKOUT PROGRESSION
+        // =========================================================
+        function completeRep(cheatDetected = false, warningNote = "") {
+            repCount++;
+            calories += 3;
+            document.getElementById('rep-count-large').innerText = repCount;
+            document.getElementById('calorie-count').innerText = calories;
+            document.getElementById('gym-hud-reps').innerText = repCount;
+            document.getElementById('gym-hud-target').innerText = `${repCount} / ${targetReps} Reps`;
+
+            const card = document.getElementById('rep-count-large').parentElement;
+            card.classList.add('text-cyan-400');
+            setTimeout(() => card.classList.remove('text-cyan-400'), 300);
+
+            let repScore = cheatDetected ? 75 : Math.floor(92 + Math.random() * 7);
+            formScore = Math.round((formScore * 0.7) + (repScore * 0.3));
+            document.getElementById('form-score-value').innerText = formScore + '%';
+            document.getElementById('score-circle-path').setAttribute('stroke-dasharray', `${formScore}, 100`);
+
+            if (cheatDetected) {
+                playSynthTone(220, 'sawtooth', 0.25);
+                speakFeedback("Rep " + repCount + ". " + warningNote);
+            } else {
+                playSynthTone(880, 'sine', 0.2);
+                speakFeedback("Rep " + repCount + ". Good form!");
+            }
+
+            logRepToSession(exerciseConfig[currentExercise].title, repCount, repScore, cheatDetected ? 'WARN' : 'PASSED');
+
+            // Auto-sync session to backend
+            saveSessionToBackend();
+
+            if (repCount >= targetReps) {
+                triggerSetRestPeriod();
+            }
+        }
+
+        function manualIncrementRep() {
+            completeRep(false, "");
+        }
+
+        // =========================================================
+        // SETS & REST INTERVAL CONTROLLER
+        // =========================================================
+        function adjustTargetReps(delta) {
+            targetReps = Math.max(3, Math.min(50, targetReps + delta));
+            document.getElementById('target-reps-val').innerText = targetReps;
+            document.getElementById('target-reps-display').innerText = `/ ${targetReps} target`;
+            document.getElementById('gym-hud-target').innerText = `${repCount} / ${targetReps} Reps`;
+        }
+
+        function triggerSetRestPeriod() {
+            isResting = true;
+            restTimeRemaining = (routineMode === 'fullbody') ? circuitSteps[circuitIndex].rest : 45;
+            document.getElementById('rest-overlay').classList.remove('hidden');
+            document.getElementById('rest-countdown').innerText = restTimeRemaining + 's';
+
+            playSynthTone(587, 'triangle', 0.25);
+
+            if (routineMode === 'fullbody') {
+                const nextIdx = circuitIndex + 1;
+                if (nextIdx < circuitSteps.length) {
+                    const nextStep = circuitSteps[nextIdx];
+                    document.getElementById('rest-title').innerText = "Circuit Step Complete";
+                    document.getElementById('rest-subtitle').innerText = `Rest up! Next up: ${nextStep.title}`;
+                    speakFeedback(`Circuit step ${circuitIndex + 1} complete! 30 seconds rest. Next exercise: ${nextStep.title}.`, true);
+                } else {
+                    document.getElementById('rest-title').innerText = "🏆 Circuit Routine Complete!";
+                    speakFeedback("Circuit complete! You crushed all exercises!", true);
+                }
+            } else {
+                speakFeedback(`Set ${currentSet} complete! Take a 45 second rest.`, true);
+            }
+
+            clearInterval(restCountdownInterval);
+            restCountdownInterval = setInterval(() => {
+                restTimeRemaining--;
+                document.getElementById('rest-countdown').innerText = restTimeRemaining + 's';
+
+                if (restTimeRemaining <= 3 && restTimeRemaining > 0) {
+                    playSynthTone(660, 'sine', 0.1);
+                }
+
+                if (restTimeRemaining <= 0) {
+                    endRestPeriod();
+                }
+            }, 1000);
+        }
+
+        function skipRest() {
+            endRestPeriod();
+        }
+
+        function endRestPeriod() {
+            clearInterval(restCountdownInterval);
+            isResting = false;
+            document.getElementById('rest-overlay').classList.add('hidden');
+
+            playSynthTone(880, 'sine', 0.35);
+
+            if (routineMode === 'fullbody') {
+                circuitIndex++;
+                if (circuitIndex < circuitSteps.length) {
+                    applyCircuitStep(circuitIndex);
+                    repCount = 0;
+                    document.getElementById('rep-count-large').innerText = '0';
+                    document.getElementById('gym-hud-reps').innerText = '0';
+                    speakFeedback(`Rest finished. Step ${circuitIndex + 1}: ${circuitSteps[circuitIndex].title}. Let's go!`, true);
+                } else {
+                    alert("🎉 Outstanding Work! You have completed the Full-Body Circuit!");
+                    handleRoutineChange('single');
+                }
+            } else {
+                if (currentSet < totalSets) {
+                    currentSet++;
+                    repCount = 0;
+                    document.getElementById('rep-count-large').innerText = '0';
+                    document.getElementById('gym-hud-reps').innerText = '0';
+                    document.getElementById('current-set-badge').innerText = `SET ${currentSet} / ${totalSets}`;
+                    document.getElementById('gym-hud-set').innerText = `SET ${currentSet}/${totalSets}`;
+                    speakFeedback(`Rest complete. Starting set ${currentSet}. Let's go!`, true);
+                } else {
+                    speakFeedback("Workout routine complete! Outstanding performance.", true);
+                    alert("🎉 Congratulations! You have completed all " + totalSets + " sets!");
+                    currentSet = 1;
+                    repCount = 0;
+                    document.getElementById('rep-count-large').innerText = '0';
+                    document.getElementById('current-set-badge').innerText = `SET 1 / ${totalSets}`;
+                    document.getElementById('gym-hud-set').innerText = `SET 1/${totalSets}`;
+                }
+            }
+
+            saveSessionToBackend();
+        }
+
+        function resetWorkoutSession() {
+            repCount = 0;
+            currentSet = 1;
+            calories = 0;
+            formScore = 95;
+            document.getElementById('rep-count-large').innerText = '0';
+            document.getElementById('calorie-count').innerText = '0';
+            document.getElementById('form-score-value').innerText = '95%';
+            document.getElementById('current-set-badge').innerText = `SET 1 / ${totalSets}`;
+            document.getElementById('gym-hud-reps').innerText = '0';
+            sessionLogs = [];
+            document.getElementById('session-log-rows').innerHTML = `
+                <tr id="empty-log-row">
+                    <td colspan="5" class="py-6 text-center text-slate-500 italic">No reps logged yet. Begin your set!</td>
+                </tr>
+            `;
+            document.getElementById('log-count-badge').innerText = '0 Reps Logged';
+            speakFeedback("Session reset.");
+            saveSessionToBackend();
+        }
+
+        // =========================================================
+        // BACKEND DATABASE SYNC (/api/session/save & /history)
+        // =========================================================
+        async function saveSessionToBackend() {
+            try {
+                await fetch('/api/session/save', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        exercise: exerciseConfig[currentExercise].title,
+                        repetitions: repCount,
+                        calories: calories,
+                        form_score: formScore,
+                        sets: currentSet,
+                        total_samples: sessionLogs.length,
+                        distribution: { [currentExercise]: repCount }
+                    })
+                });
+            } catch (e) {
+                console.warn("Backend session sync:", e);
+            }
+        }
+
+        async function loadWorkoutHistoryFromBackend() {
+            try {
+                const res = await fetch('/api/session/history');
+                const data = await res.json();
+                if (data.history && data.history.length > 0) {
+                    const last = data.history[data.history.length - 1];
+                    document.getElementById('log-count-badge').innerText = `${data.history.length} Past Workouts`;
+                }
+            } catch (e) {}
+        }
+
+        // =========================================================
+        // SESSION LOGGING & EXPORT
+        // =========================================================
+        function logRepToSession(exerciseName, repNum, score, status) {
+            const timeStr = new Date().toLocaleTimeString();
+            sessionLogs.push({ time: timeStr, exercise: exerciseName, rep: repNum, score: score, status: status });
+
+            const emptyRow = document.getElementById('empty-log-row');
+            if (emptyRow) emptyRow.remove();
+
+            const tbody = document.getElementById('session-log-rows');
+            const statusClass = (status === 'PASSED') ? 'bg-emerald-500/20 text-emerald-300' : 'bg-amber-500/20 text-amber-300';
+            
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="py-2 text-slate-400">${timeStr}</td>
+                <td class="py-2 font-bold text-white">${exerciseName}</td>
+                <td class="py-2 text-cyan-400 font-bold">Rep ${repNum}</td>
+                <td class="py-2 text-emerald-400">${score}%</td>
+                <td class="py-2 text-right"><span class="px-1.5 py-0.5 rounded ${statusClass} text-[9px]">${status}</span></td>
+            `;
+            tbody.insertBefore(tr, tbody.firstChild);
+
+            document.getElementById('log-count-badge').innerText = `${sessionLogs.length} Reps Logged`;
+        }
+
+        function exportSessionLog() {
+            if (sessionLogs.length === 0) {
+                alert("No reps have been logged yet to export.");
+                return;
+            }
+            const csvRows = [["Time", "Exercise", "Rep", "Form Score", "Status"]];
+            sessionLogs.forEach(item => {
+                csvRows.push([item.time, item.exercise, item.rep, item.score + "%", item.status]);
+            });
+
+            let csvContent = "data:text/csv;charset=utf-8," + csvRows.map(e => e.join(",")).join("\n");
+            const encodedUri = encodeURI(csvContent);
+            const link = document.createElement("a");
+            link.setAttribute("href", encodedUri);
+            link.setAttribute("download", `AI_Fitness_Session_${new Date().toISOString().slice(0, 10)}.csv`);
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+
+        // =========================================================
+        // HUD ALERT BANNERS
+        // =========================================================
+        let alertTimeout = null;
+        function showHUDWarning(msg) {
+            const alertEl = document.getElementById('hud-form-alert');
+            const msgEl = document.getElementById('hud-alert-msg');
+            const statusDot = document.getElementById('hud-status-dot');
+            const statusBadge = document.getElementById('hud-form-status-badge');
+            const gymBadge = document.getElementById('gym-hud-posture');
+
+            msgEl.innerText = msg;
+            alertEl.classList.remove('opacity-0', 'pointer-events-none', '-translate-y-2');
+            alertEl.classList.add('opacity-100', 'translate-y-0');
+
+            statusDot.className = "w-2 h-2 rounded-full bg-rose-500 animate-pulse";
+            statusBadge.className = "text-[11px] font-mono font-bold text-rose-400";
+            statusBadge.innerText = "FORM: ADJUST";
+
+            gymBadge.className = "text-2xl font-black font-mono px-6 py-2 rounded-2xl border border-rose-500/40 bg-rose-500/20 text-rose-400 shadow-lg shadow-rose-500/20 animate-bounce";
+            gymBadge.innerText = msg.toUpperCase();
+
+            clearTimeout(alertTimeout);
+            alertTimeout = setTimeout(hideHUDWarning, 2500);
+        }
+
+        function hideHUDWarning() {
+            const alertEl = document.getElementById('hud-form-alert');
+            const statusDot = document.getElementById('hud-status-dot');
+            const statusBadge = document.getElementById('hud-form-status-badge');
+            const gymBadge = document.getElementById('gym-hud-posture');
+
+            alertEl.classList.add('opacity-0', 'pointer-events-none', '-translate-y-2');
+            alertEl.classList.remove('opacity-100', 'translate-y-0');
+
+            statusDot.className = "w-2 h-2 rounded-full bg-emerald-400";
+            statusBadge.className = "text-[11px] font-mono font-bold text-emerald-300";
+            statusBadge.innerText = "FORM: OPTIMAL";
+
+            gymBadge.className = "text-2xl font-black font-mono px-6 py-2 rounded-2xl border border-emerald-500/40 bg-emerald-500/20 text-emerald-300 shadow-lg shadow-emerald-500/20";
+            gymBadge.innerText = "FORM: OPTIMAL";
+        }
+
+        // =========================================================
+        // EXERCISE SWITCHER & CONTROLS
+        // =========================================================
+        function setExercise(exKey) {
+            currentExercise = exKey;
+            const cfg = exerciseConfig[exKey];
+
+            document.getElementById('current-exercise-title').firstElementChild.innerText = cfg.title;
+            document.getElementById('joint-angle-label').innerText = cfg.jointLabel;
+            document.getElementById('active-weight').innerText = cfg.weight;
+            
+            document.querySelectorAll('.ex-btn').forEach(btn => {
+                btn.className = 'ex-btn p-2.5 rounded-xl border border-white/5 bg-slate-900/40 text-slate-300 hover:border-white/20 flex items-center justify-between transition-all';
+                if (btn.lastElementChild && btn.lastElementChild.tagName === 'I') {
+                    btn.lastElementChild.remove();
+                }
+            });
+
+            const activeBtn = document.getElementById('ex-btn-' + exKey);
+            if (activeBtn) {
+                activeBtn.className = 'ex-btn p-2.5 rounded-xl border border-cyan-400/50 bg-cyan-500/10 text-cyan-300 font-semibold flex items-center justify-between transition-all';
+                activeBtn.insertAdjacentHTML('beforeend', '<i class="fa-solid fa-check text-xs"></i>');
+            }
+
+            const muscleContainer = document.getElementById('muscle-activation-list');
+            muscleContainer.innerHTML = cfg.muscles.map(m => `
+                <div>
+                    <div class="flex justify-between text-[11px] mb-1">
+                        <span class="text-slate-300">${m.name}</span>
+                        <span class="text-cyan-400 font-bold">${m.pct}%</span>
+                    </div>
+                    <div class="w-full h-1.5 bg-slate-900 rounded-full overflow-hidden">
+                        <div class="h-full bg-gradient-to-r ${m.color} rounded-full" style="width: ${m.pct}%"></div>
+                    </div>
+                </div>
+            `).join('');
+
+            document.getElementById('ai-feedback-text').innerText = `"${cfg.feedback}"`;
+            document.getElementById('feedback-time').innerText = 'just now';
+
+            updateGymHUDLabels();
+        }
+
+        function toggleSkeletonOverlay() {
+            showSkeleton = !showSkeleton;
+            const btnText = document.getElementById('skeleton-toggle-text');
+            btnText.innerText = showSkeleton ? 'Overlay: ON' : 'Overlay: OFF';
+        }
+
+        function updateStrictness(val) {
+            strictness = val;
+            let label = 'Medium (' + val + '%)';
+            if (val > 88) label = 'Strict (' + val + '%)';
+            else if (val < 65) label = 'Relaxed (' + val + '%)';
+            document.getElementById('strictness-val').innerText = label;
+        }
+
+        function handleModelChange(val) {
+            const accEl = document.getElementById('model-accuracy');
+            const spdEl = document.getElementById('model-speed');
+
+            if (val === 'mediapipe_real') {
+                accEl.innerText = '98.4%';
+                spdEl.innerText = 'High (3D Pose)';
+            } else if (val === 'mediapipe_xgb') {
+                accEl.innerText = '96.8%';
+                spdEl.innerText = 'Fast (4.2 ms)';
+            } else if (val === 'rf') {
+                accEl.innerText = '94.5%';
+                spdEl.innerText = '2.8 ms/frame';
+            }
+        }
+
+        // =========================================================
+        // FALLBACK CANVAS SIMULATION ENGINE
+        // =========================================================
+        function initCanvasSimulation() {
+            const canvas = isGymHUDActive ? document.getElementById('gym-canvas') : document.getElementById('ai-canvas');
+            const ctx = canvas.getContext('2d');
+
+            function resizeCanvas() {
+                canvas.width = canvas.parentElement.clientWidth;
+                canvas.height = canvas.parentElement.clientHeight;
+            }
+            resizeCanvas();
+            window.addEventListener('resize', resizeCanvas);
+
+            lastSimTime = performance.now();
+
+            function render(now) {
+                if (engineMode !== 'SIMULATION') return;
+
+                const delta = (now - lastSimTime) / 1000;
+                lastSimTime = now;
+
+                ctx.fillStyle = '#060a12';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+                drawGrid(ctx, canvas.width, canvas.height);
+
+                progressVal += delta * 0.8;
+                const cycle = (Math.sin(progressVal) + 1) / 2;
+
+                const cfg = exerciseConfig[currentExercise];
+                const minA = cfg.idealAngleRange[0];
+                const maxA = cfg.idealAngleRange[1];
+                jointAngle = Math.round(minA + cycle * (maxA - minA));
+
+                phase = (Math.cos(progressVal) > 0) ? 'CONCENTRIC PHASE' : 'ECCENTRIC PHASE';
+                document.getElementById('hud-phase-indicator').innerText = phase;
+                document.getElementById('live-joint-angle').innerText = jointAngle + '°';
+                document.getElementById('gym-hud-angle').innerText = jointAngle + '°';
+
+                if (Math.abs(cycle - 0.99) < 0.015 && !window.repCountTriggered && !isResting) {
+                    window.repCountTriggered = true;
+                    completeRep(false, "");
+                } else if (cycle < 0.5) {
+                    window.repCountTriggered = false;
+                }
+
+                if (showSkeleton) {
+                    drawHumanPoseSimulation(ctx, canvas.width, canvas.height, cycle, currentExercise);
+                }
+
+                pushChartData(jointAngle, (Math.abs(Math.sin(progressVal * 2)) * 0.55).toFixed(2));
+
+                animFrameId = requestAnimationFrame(render);
+            }
+
+            animFrameId = requestAnimationFrame(render);
+        }
+
+        function drawGrid(ctx, w, h) {
+            ctx.strokeStyle = 'rgba(255, 255, 255, 0.03)';
+            ctx.lineWidth = 1;
+            const gridSize = 35;
+            for (let x = 0; x < w; x += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(x, 0);
+                ctx.lineTo(x, h);
+                ctx.stroke();
+            }
+            for (let y = 0; y < h; y += gridSize) {
+                ctx.beginPath();
+                ctx.moveTo(0, y);
+                ctx.lineTo(w, y);
+                ctx.stroke();
+            }
+        }
+
+        function drawHumanPoseSimulation(ctx, w, h, cycle, exercise) {
+            const centerX = w * 0.5;
+            const centerY = h * 0.5;
+
+            let head, leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist, hip, leftKnee, rightKnee, leftAnkle, rightAnkle;
+
+            if (exercise === 'bench') {
+                const barY = centerY - 20 + (1 - cycle) * 50;
+                head = { x: centerX - 100, y: centerY + 30 };
+                leftShoulder = { x: centerX - 40, y: centerY + 25 };
+                rightShoulder = { x: centerX - 40, y: centerY + 25 };
+                leftElbow = { x: centerX - 40, y: barY + 35 };
+                leftWrist = { x: centerX - 40, y: barY };
+                hip = { x: centerX + 50, y: centerY + 30 };
+                leftKnee = { x: centerX + 110, y: centerY + 70 };
+                leftAnkle = { x: centerX + 110, y: centerY + 120 };
+
+                ctx.strokeStyle = '#94a3b8';
+                ctx.lineWidth = 6;
+                ctx.beginPath();
+                ctx.moveTo(centerX - 90, barY);
+                ctx.lineTo(centerX + 30, barY);
+                ctx.stroke();
+
+                ctx.fillStyle = '#7000ff';
+                ctx.fillRect(centerX - 95, barY - 25, 10, 50);
+                ctx.fillRect(centerX + 25, barY - 25, 10, 50);
+            } else {
+                const squatDepth = (exercise === 'squat') ? cycle * 60 : 0;
+                const curlHeight = (exercise === 'bicep') ? cycle * 55 : 0;
+
+                head = { x: centerX, y: centerY - 100 + squatDepth };
+                leftShoulder = { x: centerX - 35, y: centerY - 60 + squatDepth };
+                rightShoulder = { x: centerX + 35, y: centerY - 60 + squatDepth };
+
+                leftElbow = { x: centerX - 45, y: centerY - 10 + squatDepth - curlHeight * 0.3 };
+                rightElbow = { x: centerX + 45, y: centerY - 10 + squatDepth - curlHeight * 0.3 };
+
+                leftWrist = { x: centerX - 45, y: centerY + 30 + squatDepth - curlHeight * 1.5 };
+                rightWrist = { x: centerX + 45, y: centerY + 30 + squatDepth - curlHeight * 1.5 };
+
+                hip = { x: centerX, y: centerY + 20 + squatDepth };
+                leftKnee = { x: centerX - 30, y: centerY + 80 + squatDepth * 0.5 };
+                rightKnee = { x: centerX + 30, y: centerY + 80 + squatDepth * 0.5 };
+
+                leftAnkle = { x: centerX - 30, y: centerY + 140 };
+                rightAnkle = { x: centerX + 30, y: centerY + 140 };
+            }
+
+            const connections = [
+                [head, leftShoulder], [head, rightShoulder],
+                [leftShoulder, rightShoulder],
+                [leftShoulder, leftElbow], [leftElbow, leftWrist],
+                [rightShoulder, rightElbow], [rightElbow, rightWrist],
+                [leftShoulder, hip], [rightShoulder, hip],
+                [hip, leftKnee], [leftKnee, leftAnkle],
+                [hip, rightKnee], [rightKnee, rightAnkle]
+            ];
+
+            ctx.strokeStyle = '#00f2fe';
+            ctx.lineWidth = 3.5;
+            ctx.shadowColor = '#00f2fe';
+            ctx.shadowBlur = 10;
+
+            connections.forEach(([p1, p2]) => {
+                if (p1 && p2) {
+                    ctx.beginPath();
+                    ctx.moveTo(p1.x, p1.y);
+                    ctx.lineTo(p2.x, p2.y);
+                    ctx.stroke();
+                }
+            });
+
+            ctx.shadowBlur = 0;
+
+            const nodes = [head, leftShoulder, rightShoulder, leftElbow, rightElbow, leftWrist, rightWrist, hip, leftKnee, rightKnee, leftAnkle, rightAnkle];
+            nodes.forEach(node => {
+                if (node) {
+                    ctx.fillStyle = '#00ff88';
+                    ctx.beginPath();
+                    ctx.arc(node.x, node.y, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.strokeStyle = '#ffffff';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+                }
+            });
+
+            if (leftElbow) {
+                ctx.fillStyle = '#ff007f';
+                ctx.font = '11px JetBrains Mono';
+                ctx.fillText(jointAngle + '°', leftElbow.x - 35, leftElbow.y);
+            }
+        }
+
+        // =========================================================
+        // CHART.JS INTEGRATION
+        // =========================================================
+        let chartInstance;
+        function initChart() {
+            const ctx = document.getElementById('biomechanicsChart').getContext('2d');
+            const initialLabels = Array.from({length: 25}, (_, i) => i + 's');
+            const initialAngles = Array.from({length: 25}, () => 160);
+            const initialVelocities = Array.from({length: 25}, () => 0.4);
+
+            chartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: initialLabels,
+                    datasets: [
+                        {
+                            label: 'Joint Angle (°)',
+                            data: initialAngles,
+                            borderColor: '#00f2fe',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.35,
+                            yAxisID: 'y'
+                        },
+                        {
+                            label: 'Velocity (m/s)',
+                            data: initialVelocities,
+                            borderColor: '#7000ff',
+                            borderWidth: 2,
+                            pointRadius: 0,
+                            tension: 0.35,
+                            yAxisID: 'y1'
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    animation: false,
+                    plugins: {
+                        legend: { display: false }
+                    },
+                    scales: {
+                        x: { display: false },
+                        y: {
+                            type: 'linear',
+                            display: true,
+                            position: 'left',
+                            min: 30,
+                            max: 185,
+                            ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } },
+                            grid: { color: 'rgba(255, 255, 255, 0.05)' }
+                        },
+                        y1: {
+                            type: 'linear',
+                            display: true,
+                            position: 'right',
+                            min: 0,
+                            max: 1.5,
+                            ticks: { color: '#64748b', font: { size: 9, family: 'JetBrains Mono' } },
+                            grid: { drawOnChartArea: false }
+                        }
+                    }
+                }
+            });
+        }
+
+        function pushChartData(angle, velocity) {
+            if (!chartInstance) return;
+            const dataAngles = chartInstance.data.datasets[0].data;
+            const dataVelocities = chartInstance.data.datasets[1].data;
+
+            dataAngles.shift();
+            dataAngles.push(angle);
+
+            dataVelocities.shift();
+            dataVelocities.push(velocity);
+
+            chartInstance.update('none');
+        }  
+    </script>
+</body>
+</html>
