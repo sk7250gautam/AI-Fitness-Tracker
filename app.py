@@ -45,10 +45,12 @@ if MODEL_FILE.exists():
 
 @app.route("/")
 def index():
+    template_path = BASE_DIR / "templates" / "index.html"
 
-    return render_template(
-        "index.html"
-    )
+    if not template_path.exists():
+        return f"Template not found: {template_path}", 500
+
+    return template_path.read_text(encoding="utf-8")
 
 
 # ============================================================
