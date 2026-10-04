@@ -1,0 +1,15 @@
+{
+    "model": "Random Forest",
+    "model_accuracy": 0.953,
+    "detected_exercise": "bench",
+    "estimated_repetitions": 63,
+    "total_samples": 72480,
+    "prediction_distribution": {
+        "bench": 14205,
+        "squat": 12695,
+        "overhead_press": 12628,
+        "rest": 11143,
+        "deadlift": 10910,
+        "row": 10899
+    }
+}
